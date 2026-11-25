@@ -28,6 +28,18 @@ if (/[\n\r]/.test(LINE)) {
 if (/[\u0000-\u001F\u007F\u200B-\u200D\uFEFF]/.test(LINE)) {
   throw new Error("gate FAIL: line contains a control or zero-width character");
 }
+// Invisible bidi controls / line & paragraph separators break one-line display.
+if (/[\u2028\u2029\u202A-\u202E\u2060\u00AD]/.test(LINE)) {
+  throw new Error("gate FAIL: line contains a bidi-control or separator character");
+}
+// No leading / trailing whitespace: a padded line still "looks" right.
+if (LINE !== LINE.trim()) {
+  throw new Error("gate FAIL: line has leading or trailing whitespace");
+}
+// UTF-8 round-trip: the bytes written must decode back to exactly this line.
+if (Buffer.from(LINE, "utf8").toString("utf8") !== LINE) {
+  throw new Error("gate FAIL: line fails UTF-8 round-trip");
+}
 
 // --- Write (no trailing newline: the entry is exactly one line) ---
 
